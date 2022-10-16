@@ -1,5 +1,4 @@
 ﻿#include <iostream>
-#include <stdlib.h>
 #include <string>
 #include <windows.h>
 #include <winhttp.h>
@@ -11,6 +10,8 @@ int getLastId(const std::string&);
 int getUpdateId(const std::string&);
 void start();
 
+bool leftDown = false;
+int x0 = 10;
 int x = 0;
 int y = 0;
 int max_x = GetSystemMetrics(SM_CXFULLSCREEN);
@@ -19,8 +20,10 @@ int max_y = GetSystemMetrics(SM_CYFULLSCREEN);
 int main()
 {
     start();
-    std::string str = getUpdates();
-    int update_id = getUpdateId(str);
+    std::string s = getUpdates();
+    s = std::string(s.rbegin(), s.rend());
+    int update_id = getUpdateId(s);
+    std::string str = getUpdates(update_id+1);
     str = std::string(str.rbegin(), str.rend());
     int id = getLastId(str);
 
@@ -38,8 +41,8 @@ int main()
             id = new_id;
             int n = getLastMessage(str);
             if (n == 1) {
-                if (x <= max_x - 10) {
-                    x += 10;
+                if (x <= max_x - x0) {
+                    x += x0;
                 }
                 else {
                     x = max_x;
@@ -47,8 +50,8 @@ int main()
                 SetCursorPos(x, y);
             }
             else if (n == 2) {
-                if (y <= max_y - 10) {
-                    y += 10;
+                if (y <= max_y - x0) {
+                    y += x0;
                 }
                 else {
                     y = max_y;
@@ -56,8 +59,8 @@ int main()
                 SetCursorPos(x, y);
             }
             else if (n == 3) {
-                if (x >= 10) {
-                    x -= 10;
+                if (x >= x0) {
+                    x -= x0;
                 }
                 else {
                     x = 0;
@@ -65,8 +68,8 @@ int main()
                 SetCursorPos(x, y);
             }
             else if (n == 4) {
-                if (y >= 10) {
-                    y -= 10;
+                if (y >= x0) {
+                    y -= x0;
                 }
                 else {
                     y = 0;
@@ -76,6 +79,26 @@ int main()
             else if (n == 5) {
                 mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            }
+            else if (n == 6) {
+                if (leftDown) {
+                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    leftDown = false;
+                }
+                else {
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    leftDown = true;
+                }
+            }
+            else if (n == 7) {
+                mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+                mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+            }
+            else if (n == 9) {
+                x0 = x0 == 10 ? 100 : 10;
+            }
+            else if (n >= 10 && n <= 256) {
+                x0 = n;
             }
             else {
                 break;
@@ -169,7 +192,7 @@ int getUpdateId(const std::string& s) {
     int i = 0;
     std::string id = "";
     while (i < s.length()) {
-        if (s[i] == 'u' && s[i + 1] == 'p' && s[i + 2] == 'd' && s[i + 3] == 'a') {
+        if (s[i] == '\"' && s[i + 1] == 'e' && s[i + 2] == 'g' && s[i + 3] == 'a') {
             int ii = 0;
             while (s[i + 11 + ii] >= '0' && s[i + 11 + ii] <= '9') {
                 id += s[i + 11 + ii];
@@ -179,6 +202,7 @@ int getUpdateId(const std::string& s) {
         }
         i += 1;
     }
+    id = std::string(id.rbegin(), id.rend());
     int idd = atoi(id.c_str());
     return idd;
 }
@@ -188,7 +212,7 @@ void start() {
         hConnect = NULL,
         hRequest = NULL;
 
-    char data[1000] = "{\"chat_id\": 854936011,\"text\" : \"Start\",\"reply_markup\" : {\"keyboard\": [[{\"text\": \"A\"},{\"text\": \"4\"},{ \"text\": \"B\" }],[{\"text\": \"3\"},{\"text\": \"5\"},{ \"text\": \"1\" }],[{\"text\": \"C\"},{\"text\": \"2\"},{ \"text\": \"D\" }]]}}";
+    char data[1000] = "{\"chat_id\": 854936011,\"text\" : \"Start\",\"reply_markup\" : {\"keyboard\": [[{\"text\": \"5\"},{\"text\": \"4\"},{ \"text\": \"7\" }],[{\"text\": \"3\"},{\"text\": \"9\"},{ \"text\": \"1\" }],[{\"text\": \"6\"},{\"text\": \"2\"},{ \"text\": \"8\" }]]}}";
     
     hSession = WinHttpOpen(L"WinHTTP Zubai/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     hConnect = WinHttpConnect(hSession, L"api.telegram.org", INTERNET_DEFAULT_HTTPS_PORT, 0);
